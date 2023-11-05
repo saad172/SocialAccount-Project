@@ -5,11 +5,12 @@ const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const app = express();
 const port = 3000;
+const ip = '159.203.143.52';
 
 const db = mysql.createConnection({
-  user: "verdaxxed_node",
-  host: "159.203.143.52",
-  password: "Amina@1218",
+  user: "root",
+  host: "localhost",
+  password: "password",
   database: "SocialAccount",
 });
 
