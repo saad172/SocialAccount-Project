@@ -16,15 +16,6 @@ const db = mysql.createConnection({
 
 app.use(express.json());
 
-app.get("/getUsers", (req, res) => {
-  db.query("SELECT * FROM User", (err, result) => {
-    if (err) {
-      console.log(err);
-    } else {
-      res.send(result);
-    }
-  });
-});
 app.post("/createAccount", (req, res) => {
   const user_name = req.body.user_name;
   const last_name = req.body.last_name;
@@ -244,6 +235,53 @@ app.delete("/deleteAccount", (req, res) => {
     }
   );
 });
+
+app.post("/userLogin", (req, res) => {
+  const user_name = req.body.user_name;
+  const password = req.body.password;
+
+  // Check if user exists in the database
+  db.query("SELECT * FROM User WHERE user_name = ?", [user_name], (err, rows) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).send("Error validating User");
+    }
+
+    if (rows.length === 0) {
+      console.log("Username does not exist");
+      return res.status(404).send("User Not Found");
+    }
+
+    const storedPasswordHash = rows[0].password;
+
+    // Compare the provided password with the stored password hash
+    bcrypt.compare(password, storedPasswordHash, (bcryptErr, isMatch) => {
+      if (bcryptErr) {
+        console.log(bcryptErr);
+        return res.status(500).send("Error comparing Passwords");
+      }
+
+      if (!isMatch) {
+        return res.status(401).send({loggedin: false, errorDesc: "Incorrect Password"});
+      }
+
+      const customerInfo = {        
+        userName : rows[0].user_name,
+        gender : rows[0].gender,
+        firstName : rows[0].first_name,
+        lastName : rows[0].last_name,
+        emailAddress : rows[0].email_address,
+        accountNumber : rows[0].account_number,
+        loggedIn : true
+      }
+
+      // If the password is correct, you can respond with a successful login message.
+      console.log("Successfully Logged in");
+      return res.status(200).send(customerInfo);
+    });
+  });
+});
+
 
 app.listen(port, () => {
   console.log("Server has Started on Port:" + port);
